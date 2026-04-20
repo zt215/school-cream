@@ -199,13 +199,9 @@ def active_roster(students):
 
 
 def seed_students_if_empty(conn):
-    cur = conn.execute("SELECT COUNT(1) FROM students")
-    total = int(cur.fetchone()[0] or 0)
-    if total > 0:
-        return
     conn.executemany(
         """
-        INSERT INTO students (student_id, name, gender, class_name, status, created_at)
+        INSERT OR IGNORE INTO students (student_id, name, gender, class_name, status, created_at)
         VALUES (?, ?, ?, ?, 'active', ?)
         """,
         [

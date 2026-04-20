@@ -2,7 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import os
-import torch
+try:
+    import torch
+except ModuleNotFoundError:
+    torch = None
+
+# torch 可能在纯 API 场景未安装，这里做兼容。
+TORCH_AVAILABLE = torch is not None
+CUDA_AVAILABLE = bool(TORCH_AVAILABLE and torch.cuda.is_available())
 
 # 系统名称（用于页面标题、API文档、插件清单等展示）
 SYSTEM_NAME = os.getenv('SYSTEM_NAME', '大学生课堂行为识别系统')
@@ -21,8 +28,8 @@ DETECTION_CONFIG = {
 
 # 模型配置
 MODEL_CONFIG = {
-    'device': 'cuda' if torch.cuda.is_available() else 'cpu',
-    'dtype': torch.float16 if torch.cuda.is_available() else torch.float32,
+    'device': 'cuda' if CUDA_AVAILABLE else 'cpu',
+    'dtype': torch.float16 if CUDA_AVAILABLE else (torch.float32 if TORCH_AVAILABLE else 'float32'),
     'model_priority': ['best', 'yolov12n', 'yolo11n'],  # 模型优先级
     'phone_model_enabled': True,                         # 是否启用手机检测
     'skeleton_max_frames': 300,                          # 骨架序列最大帧数
@@ -73,7 +80,7 @@ LOG_CONFIG = {
 
 # 性能配置
 PERFORMANCE_CONFIG = {
-    'enable_gpu': torch.cuda.is_available(),
+    'enable_gpu': CUDA_AVAILABLE,
     'gpu_memory_fraction': 0.8,                         # GPU内存使用比例
     'cpu_threads': os.cpu_count(),                      # CPU线程数
     'batch_size': 1,                                    # 批处理大小
@@ -97,13 +104,13 @@ def get_device_info():
     """获取设备信息"""
     device_info = {
         'device': MODEL_CONFIG['device'],
-        'cuda_available': torch.cuda.is_available(),
-        'cuda_version': torch.version.cuda if torch.cuda.is_available() else None,
-        'cuda_device_count': torch.cuda.device_count() if torch.cuda.is_available() else 0,
+        'cuda_available': CUDA_AVAILABLE,
+        'cuda_version': torch.version.cuda if CUDA_AVAILABLE else None,
+        'cuda_device_count': torch.cuda.device_count() if CUDA_AVAILABLE else 0,
         'cpu_count': os.cpu_count(),
     }
     
-    if torch.cuda.is_available():
+    if CUDA_AVAILABLE:
         device_info['gpu_name'] = torch.cuda.get_device_name(0)
         device_info['gpu_memory'] = torch.cuda.get_device_properties(0).total_memory
     
