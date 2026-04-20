@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 大学生课堂行为识别系统</title>
+    <style>
+        :root{
+            --bg1:#eef6ff;
+            --bg2:#f8fbff;
+            --card:#ffffff;
+            --line:#d7e8f7;
+            --text:#27445f;
+            --muted:#7090aa;
+            --blue:#58b8f2;
+            --blue-dark:#2b8fd6;
+            --danger:#d64545;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:"Microsoft YaHei","Segoe UI",sans-serif;
+            color:var(--text);
+            background:
+                radial-gradient(900px 420px at 15% 20%, rgba(88,184,242,.22), transparent 55%),
+                radial-gradient(900px 420px at 85% 80%, rgba(43,143,214,.18), transparent 55%),
+                linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+        }
+        .wrap{
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:24px;
+        }
+        .card{
+            width:420px;
+            max-width:92vw;
+            background:rgba(255,255,255,.9);
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:22px 22px 18px;
+            box-shadow:0 18px 55px rgba(39,68,95,.12);
+            backdrop-filter: blur(10px);
+        }
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:14px;
+        }
+        .logo{
+            width:44px;height:44px;border-radius:50%;
+            background:linear-gradient(180deg,#78c6f5,#4fabe5);
+            color:#fff;font-weight:800;font-size:18px;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 8px 18px rgba(88,184,242,.35);
+        }
+        .brand h2{
+            margin:0;
+            font-size:18px;
+            color:var(--blue-dark);
+            letter-spacing:.5px;
+        }
+        .brand p{
+            margin:2px 0 0;
+            font-size:12px;
+            color:var(--muted);
+        }
+        .field{ margin-top:12px; }
+        label{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin:0 0 6px;
+            color:var(--text);
+            font-size:13px;
+            font-weight:700;
+        }
+        .hint{ font-weight:600; font-size:12px; color:var(--muted); }
+        .input{
+            position:relative;
+        }
+        input{
+            width:100%;
+            padding:11px 12px;
+            border:1px solid #cfe2f3;
+            border-radius:10px;
+            background:#fff;
+            color:var(--text);
+            outline:none;
+            font-size:14px;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        input:focus{
+            border-color: rgba(43,143,214,.8);
+            box-shadow: 0 0 0 4px rgba(88,184,242,.18);
+        }
+        .toggle{
+            position:absolute;
+            right:10px;
+            top:50%;
+            transform:translateY(-50%);
+            border:0;
+            background:transparent;
+            color:var(--muted);
+            cursor:pointer;
+            padding:6px 8px;
+            border-radius:8px;
+            font-size:12px;
+            font-weight:700;
+        }
+        .toggle:hover{ background: rgba(112,144,170,.12); }
+        button.primary{
+            width:100%;
+            margin-top:16px;
+            padding:11px 12px;
+            border:0;
+            border-radius:12px;
+            color:#fff;
+            background: linear-gradient(90deg, #6dc4f5, #4baee9);
+            font-weight:800;
+            letter-spacing:.5px;
+            cursor:pointer;
+            box-shadow:0 10px 22px rgba(75,174,233,.26);
+        }
+        button.primary:hover{ filter: brightness(1.02); }
+        button.primary:active{ transform: translateY(1px); }
+        .error{
+            margin-top:12px;
+            padding:10px 12px;
+            border-radius:12px;
+            border:1px solid rgba(214,69,69,.25);
+            background: rgba(214,69,69,.06);
+            color: var(--danger);
+            font-size:13px;
+            display: none;
+        }
+        .error.show{ display:block; }
+        .link{
+            margin-top:14px;
+            font-size:13px;
+            text-align:center;
+            color:var(--muted);
+        }
+        .link a{ color: var(--blue-dark); font-weight:800; text-decoration:none; }
+        .link a:hover{ text-decoration:underline; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <form class="card" method="post" action="/login">
+            <div class="brand">
+                <div class="logo">AI</div>
+                <div>
+                    <h2>大学生课堂行为识别系统 · 登录</h2>
+                    <p>课堂行为识别与分析平台</p>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>用户名 <span class="hint">至少 3 位</span></label>
+                <div class="input">
+                    <input type="text" name="username" autocomplete="username" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>密码 <span class="hint">至少 6 位</span></label>
+                <div class="input">
+                    <input id="pwd" type="password" name="password" autocomplete="current-password" required>
+                    <button class="toggle" type="button" id="togglePwd">显示</button>
+                </div>
+            </div>
+
+            <button class="primary" type="submit">登录</button>
+
+            <div class="error {{ 'show' if error else '' }}">{{ error }}</div>
+            <div class="link">没有账号？<a href="/register">去注册</a></div>
+        </form>
+    </div>
+
+    <script>
+        const pwd = document.getElementById("pwd");
+        const toggle = document.getElementById("togglePwd");
+        if (pwd && toggle) {
+            toggle.addEventListener("click", () => {
+                const isPwd = pwd.type === "password";
+                pwd.type = isPwd ? "text" : "password";
+                toggle.textContent = isPwd ? "隐藏" : "显示";
+            });
+        }
+    </script>
+</body>
+</html>
+

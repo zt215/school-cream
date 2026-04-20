@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>大学生课堂行为识别系统</title>
+    <style>
+        :root {
+            --bg: #f4f8fd;
+            --panel: #ffffff;
+            --line: #d7e8f7;
+            --blue: #58b8f2;
+            --blue-dark: #2b8fd6;
+            --text: #27445f;
+            --muted: #7090aa;
+            --ok: #34b37b;
+            --warn: #ff9a57;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: linear-gradient(180deg, #eef6ff 0%, #f8fbff 100%);
+            color: var(--text);
+        }
+        .app {
+            width: 100%;
+            min-height: 100vh;
+            padding: 14px;
+            display: grid;
+            grid-template-columns: 130px 1fr 170px;
+            gap: 10px;
+        }
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(83, 143, 196, 0.12);
+        }
+        .left {
+            padding: 10px 8px;
+        }
+        .left .title {
+            margin: 2px 0 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--blue-dark);
+            text-align: center;
+        }
+        .menu-btn {
+            width: 100%;
+            margin-bottom: 8px;
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 8px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            background: linear-gradient(90deg, #6ec4f7, #49abe9);
+        }
+        .menu-btn.secondary {
+            background: linear-gradient(90deg, #8dcdf7, #6ab9ec);
+        }
+        .center {
+            padding: 10px;
+            display: grid;
+            gap: 10px;
+            grid-template-rows: auto 1fr auto;
+        }
+        .toolbar {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+        .slider-wrap {
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #f8fcff;
+        }
+        .slider-wrap label {
+            display: block;
+            font-size: 12px;
+            color: var(--text);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--blue-dark);
+        }
+        input[type="text"], input[type="number"]{
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 8px;
+            background: #ffffff;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+        .form-label{
+            font-size: 12px;
+            color: var(--text);
+            font-weight: 700;
+            margin-top: 8px;
+            margin-bottom: 6px;
+        }
+        .footer-btn.danger{
+            background: linear-gradient(90deg, #ff7a7a, #e93f3f);
+        }
+        .state-pill {
+            border: 1px solid var(--line);
+            background: #f5fbff;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .preview {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background:
+                linear-gradient(rgba(79, 164, 225, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79, 164, 225, 0.08) 1px, transparent 1px),
+                linear-gradient(135deg, #eff8ff, #f7faff);
+            background-size: 20px 20px, 20px 20px, auto;
+            position: relative;
+            min-height: 420px;
+            overflow: hidden;
+        }
+        .preview #video-preview{
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            z-index: 1;
+        }
+        .preview .watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #2e4b67;
+            opacity: 0.85;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .preview .watermark h2 {
+            margin: 0;
+            font-size: 42px;
+            letter-spacing: 2px;
+            color: #4f8ac2;
+        }
+        .preview .watermark p {
+            margin: 8px 0 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .bbox {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 4px;
+            font-size: 10px;
+            padding: 1px 4px;
+            background: #fff;
+            font-weight: 700;
+        }
+        .bbox.a { top: 60px; left: 28px; border-color: #557de8; color: #557de8; }
+        .bbox.b { top: 140px; right: 90px; border-color: #36b267; color: #36b267; }
+        .bbox.c { bottom: 70px; right: 50px; border-color: #9a6ed8; color: #9a6ed8; }
+        .table-wrap {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th, td {
+            border-bottom: 1px solid #e8f1f9;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #f2f9ff;
+            color: #3f6f97;
+            font-weight: 700;
+        }
+        .right {
+            padding: 10px 8px;
+            display: grid;
+            grid-template-rows: auto auto auto auto auto auto;
+            gap: 8px;
+        }
+        .right .logo-card {
+            text-align: center;
+            padding: 10px 6px;
+        }
+        .logo {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            margin: 0 auto 6px;
+            background: linear-gradient(180deg, #78c6f5, #4fabe5);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: #f3fbff;
+            font-size: 12px;
+        }
+        .stat-card {
+            padding: 8px;
+        }
+        .stat-card h4 {
+            margin: 0 0 6px;
+            font-size: 12px;
+            color: #3e6f97;
+        }
+        .big-num {
+            height: 30px;
+            border: 1px solid #8ab9df;
+            border-radius: 7px;
+            background: #f4fbff;
+            text-align: center;
+            line-height: 28px;
+            font-weight: 700;
+            color: #2b7cbc;
+        }
+        .mini-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .mini {
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #f7fcff;
+            text-align: center;
+            padding: 4px 2px;
+            font-size: 11px;
+            color: #4d7697;
+        }
+        .footer-btn {
+            border: 0;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #6dc4f5, #4baee9);
+            color: #fff;
+            font-weight: 700;
+            padding: 10px;
+            cursor: pointer;
+        }
+        @media (max-width: 1100px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+            .left, .right {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            .left .title { grid-column: 1 / -1; }
+            .right { grid-template-rows: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="panel left" aria-label="功能菜单">
+            <div class="title">大学生课堂行为识别系统</div>
+            <button class="menu-btn" id="pick-image-btn">图片选择</button>
+            <button class="menu-btn" id="pick-video-btn">视频选择</button>
+            <button class="menu-btn secondary" id="camera-btn">摄像头</button>
+            <button class="menu-btn secondary" id="refresh-btn">状态刷新</button>
+
+            <input id="image-file-input" type="file" accept="image/*" style="display:none;" />
+            <input id="video-file-input" type="file" accept="video/*" style="display:none;" />
+
+            <div style="margin-top: 10px;">
+                <div class="form-label">摄像头/视频源 (camera)</div>
+                <input id="camera-input" type="text" value="0" />
+
+                <div class="form-label">注册中心 URL (registry_url)</div>
+                <input id="registry-input" type="text" placeholder="可空：如需自动获取课程设备" />
+
+                <div class="form-label">输出文件 (output)</div>
+                <input id="output-input" type="text" value="output/demo.mp4" />
+
+                <div class="form-label">模型 (model_name)</div>
+                <select id="model-select" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 8px; font-size:13px;">
+                    <option value="auto">auto（自动）</option>
+                </select>
+
+                <div class="form-label">最大帧数 (max_frames)</div>
+                <input id="maxframes-input" type="number" placeholder="可空：不填则无限" />
+
+                <div style="display:grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px;">
+                    <button class="footer-btn" id="start-btn">开始监控</button>
+                    <button class="footer-btn danger" id="stop-btn">停止监控</button>
+                    <button class="footer-btn" id="logout-btn" style="background:linear-gradient(90deg,#9aa8b5,#7f8e9c);">退出登录</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="panel center">
+            <div class="toolbar">
+                <div class="slider-wrap">
+                    <label for="conf-slider">置信度 (Conf): <span id="conf-value">0.50</span></label>
+                    <input id="conf-slider" type="range" min="0" max="1" step="0.01" value="0.5" />
+                </div>
+                <div class="slider-wrap">
+                    <label for="iou-slider">交并比 (IoU): <span id="iou-value">0.50</span></label>
+                    <input id="iou-slider" type="range" min="0" max="1" step="0.01" value="0.5" />
+                </div>
+                <div class="state-pill" id="system-status">检测目标: 0 个</div>
+            </div>
+
+            <section class="preview">
+                <img id="video-preview" alt="视频预览" />
+                <div class="bbox a" style="display:none;">Person 95%</div>
+                <div class="bbox b" style="display:none;">Dog 83%</div>
+                <div class="bbox c" style="display:none;">Cat 90%</div>
+                <div class="watermark">
+                    <h2>YOLO</h2>
+                    <p>实时目标检测</p>
+                </div>
+            </section>
+
+            <section class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>文件路径</th>
+                            <th>类别</th>
+                            <th>置信度</th>
+                            <th>坐标位置</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-tbody">
+                        <tr><td colspan="5" style="text-align:center;color:#7697b2;">暂无检测记录</td></tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+
+        <aside class="panel right" aria-label="统计信息面板">
+            <div class="panel logo-card">
+                <div class="logo">AI</div>
+                <div class="badge">大学生课堂行为识别系统</div>
+            </div>
+            <div class="panel stat-card">
+                <h4>总类别计</h4>
+                <div class="big-num" id="total-person">0</div>
+            </div>
+            <div class="panel stat-card">
+                <h4>类别过滤</h4>
+                <div class="big-num" id="course-name">未选择</div>
+            </div>
+            <div class="panel stat-card">
+                <h4>置信度</h4>
+                <div class="big-num" id="last-update">0.00</div>
+            </div>
+            <div class="panel stat-card">
+                <h4>课堂专注度</h4>
+                <div class="big-num" id="focus-score">80.00</div>
+            </div>
+            <div class="panel stat-card">
+                <h4>多模态状态</h4>
+                <div class="mini-grid">
+                    <div class="mini">视觉: <span id="modal-vision">ON</span></div>
+                    <div class="mini">音频: <span id="modal-audio">OFF</span></div>
+                    <div class="mini">交互: <span id="modal-interaction">OFF</span></div>
+                    <div class="mini">等级: <span id="focus-level">中</span></div>
+                </div>
+            </div>
+            <div class="panel stat-card">
+                <h4>坐标位置</h4>
+                <div class="mini-grid">
+                    <div class="mini">x: <span id="mx">0</span></div>
+                    <div class="mini">y: <span id="my">0</span></div>
+                    <div class="mini">w: <span id="mw">0</span></div>
+                    <div class="mini">h: <span id="mh">0</span></div>
+                </div>
+            </div>
+            <button class="footer-btn" id="export-btn">结果导出</button>
+        </aside>
+    </div>
+
+    <script>
+        const confSlider = document.getElementById("conf-slider");
+        const iouSlider = document.getElementById("iou-slider");
+        const confValue = document.getElementById("conf-value");
+        const iouValue = document.getElementById("iou-value");
+        const systemStatus = document.getElementById("system-status");
+        const totalPerson = document.getElementById("total-person");
+        const courseName = document.getElementById("course-name");
+        const lastUpdate = document.getElementById("last-update");
+        const focusScore = document.getElementById("focus-score");
+        const focusLevel = document.getElementById("focus-level");
+        const modalVision = document.getElementById("modal-vision");
+        const modalAudio = document.getElementById("modal-audio");
+        const modalInteraction = document.getElementById("modal-interaction");
+        const historyTbody = document.getElementById("history-tbody");
+        const refreshBtn = document.getElementById("refresh-btn");
+
+        const startBtn = document.getElementById("start-btn");
+        const stopBtn = document.getElementById("stop-btn");
+        const logoutBtn = document.getElementById("logout-btn");
+        const exportBtn = document.getElementById("export-btn");
+        const cameraInput = document.getElementById("camera-input");
+        const registryInput = document.getElementById("registry-input");
+        const outputInput = document.getElementById("output-input");
+        const maxFramesInput = document.getElementById("maxframes-input");
+        const videoPreview = document.getElementById("video-preview");
+        const watermark = document.querySelector(".preview .watermark");
+        const pickImageBtn = document.getElementById("pick-image-btn");
+        const pickVideoBtn = document.getElementById("pick-video-btn");
+        const cameraBtn = document.getElementById("camera-btn");
+        const modelBtn = document.getElementById("model-btn");
+        const imageFileInput = document.getElementById("image-file-input");
+        const videoFileInput = document.getElementById("video-file-input");
+        const modelSelect = document.getElementById("model-select");
+
+        let frameTimer = null;
+        let usingStream = false;
+        let streamLoaded = false;
+
+        async function uploadAndSetCamera(file) {
+            const fd = new FormData();
+            fd.append("file", file);
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error || "上传失败");
+            cameraInput.value = json.path;
+            registryInput.value = "";
+        }
+
+        if (pickImageBtn && imageFileInput) {
+            pickImageBtn.addEventListener("click", () => imageFileInput.click());
+            imageFileInput.addEventListener("change", async () => {
+                const f = imageFileInput.files && imageFileInput.files[0];
+                if (!f) return;
+                try {
+                    await uploadAndSetCamera(f);
+                    alert("图片已上传，已写入 camera，可直接开始监控");
+                } catch (e) {
+                    alert("上传失败：" + (e?.message || e));
+                } finally {
+                    imageFileInput.value = "";
+                }
+            });
+        }
+
+        if (pickVideoBtn && videoFileInput) {
+            pickVideoBtn.addEventListener("click", () => videoFileInput.click());
+            videoFileInput.addEventListener("change", async () => {
+                const f = videoFileInput.files && videoFileInput.files[0];
+                if (!f) return;
+                try {
+                    await uploadAndSetCamera(f);
+                    alert("视频已上传，已写入 camera，可直接开始监控");
+                } catch (e) {
+                    alert("上传失败：" + (e?.message || e));
+                } finally {
+                    videoFileInput.value = "";
+                }
+            });
+        }
+
+        if (cameraBtn) {
+            cameraBtn.addEventListener("click", () => {
+                cameraInput.value = "0";
+                registryInput.value = "";
+                alert("已切换为本机摄像头：camera=0");
+            });
+        }
+
+        if (modelBtn) {
+            modelBtn.addEventListener("click", () => {
+                // 触发拉取模型列表并展开选择
+                loadModels(true);
+            });
+        }
+
+        async function loadModels(openAfterLoad = false) {
+            if (!modelSelect) return;
+            try {
+                const res = await fetch("/api/models");
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || "模型列表获取失败");
+                const builtin = json.data?.builtin || [];
+                const local = json.data?.local || [];
+
+                const current = modelSelect.value || "auto";
+                modelSelect.innerHTML = "";
+
+                const addOpt = (val, label) => {
+                    const o = document.createElement("option");
+                    o.value = val;
+                    o.textContent = label;
+                    modelSelect.appendChild(o);
+                };
+
+                addOpt("auto", "auto（自动）");
+                builtin.filter((x) => x && x !== "auto").forEach((m) => addOpt(m, `内置: ${m}`));
+                local.forEach((m) => addOpt(m, `本地: ${m}`));
+
+                // 恢复之前的选择
+                const exists = Array.from(modelSelect.options).some((o) => o.value === current);
+                modelSelect.value = exists ? current : "auto";
+
+                if (openAfterLoad) modelSelect.focus();
+            } catch (e) {
+                alert("模型列表加载失败：" + (e?.message || e));
+            }
+        }
+
+        function startFramePolling() {
+            if (!videoPreview) return;
+            // 优先使用 MJPEG 流，失败则自动降级到 /api/frame 轮询
+            usingStream = true;
+            streamLoaded = false;
+            if (frameTimer) {
+                clearInterval(frameTimer);
+                frameTimer = null;
+            }
+            videoPreview.src = `/api/stream?ts=${Date.now()}`;
+            videoPreview.style.display = "block";
+            if (watermark) watermark.style.display = "none";
+
+            // 2 秒内流未加载成功则回退轮询
+            globalThis.setTimeout(() => {
+                if (usingStream && !streamLoaded) {
+                    usingStream = false;
+                    const poll = () => {
+                        videoPreview.src = `/api/frame?ts=${Date.now()}`;
+                    };
+                    poll();
+                    frameTimer = setInterval(poll, 200);
+                }
+            }, 2000);
+        }
+
+        function stopFramePolling() {
+            if (frameTimer) {
+                clearInterval(frameTimer);
+                frameTimer = null;
+            }
+            usingStream = false;
+            streamLoaded = false;
+            if (videoPreview) videoPreview.src = "";
+            if (videoPreview) videoPreview.style.display = "none";
+            if (watermark) watermark.style.display = "flex";
+        }
+
+        if (videoPreview) {
+            videoPreview.addEventListener("error", () => {
+                if (usingStream) {
+                    // 流失败时自动降级到 /api/frame 轮询
+                    usingStream = false;
+                    const poll = () => {
+                        videoPreview.src = `/api/frame?ts=${Date.now()}`;
+                    };
+                    if (frameTimer) clearInterval(frameTimer);
+                    poll();
+                    frameTimer = setInterval(poll, 200);
+                    return;
+                }
+                // 轮询模式失败：显示水印
+                videoPreview.style.display = "none";
+                if (watermark) watermark.style.display = "flex";
+            });
+            videoPreview.addEventListener("load", () => {
+                streamLoaded = true;
+                if (watermark) watermark.style.display = "none";
+            });
+        }
+
+        async function startMonitor() {
+            try {
+                const camera = (cameraInput.value || "").trim();
+                const registryUrl = (registryInput.value || "").trim();
+                const output = (outputInput.value || "").trim();
+                const maxFramesRaw = (maxFramesInput.value || "").toString().trim();
+                const payload = {};
+
+                if (registryUrl) {
+                    payload.registry_url = registryUrl;
+                } else {
+                    if (!camera) {
+                        alert("请提供 camera（例如 0 或 rtsp://...）或填写 registry_url");
+                        return;
+                    }
+                    payload.camera = camera;
+                }
+
+                if (output) payload.output = output;
+                if (maxFramesRaw) payload.max_frames = Number(maxFramesRaw);
+                if (modelSelect && modelSelect.value) payload.model_name = modelSelect.value;
+
+                const res = await fetch("/api/system/start", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                const json = await res.json();
+                if (!json.success) {
+                    // 已在运行：直接刷新状态，避免“点了没反应”的体验
+                    if ((json.error || "").includes("已在运行")) {
+                        startFramePolling();
+                        await fetchStatus();
+                        return;
+                    }
+                    throw new Error(json.error || "启动失败");
+                }
+
+                startFramePolling();
+                await fetchStatus();
+            } catch (e) {
+                console.error("startMonitor error:", e);
+                alert("启动失败：" + (e?.message || e));
+            }
+        }
+
+        async function stopMonitor() {
+            try {
+                const res = await fetch("/api/system/stop", { method: "POST" });
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || "停止失败");
+                stopFramePolling();
+                await fetchStatus();
+            } catch (e) {
+                console.error("stopMonitor error:", e);
+                alert("停止失败：" + (e?.message || e));
+            }
+        }
+
+        if (startBtn) startBtn.addEventListener("click", startMonitor);
+        if (stopBtn) stopBtn.addEventListener("click", stopMonitor);
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", () => {
+                if (globalThis.confirm("是否退出系统？")) {
+                    globalThis.location.href = "/logout";
+                }
+            });
+        }
+        if (exportBtn) exportBtn.addEventListener("click", () => { globalThis.location.href = "/api/export/pdf"; });
+
+        confSlider.addEventListener("input", () => {
+            confValue.textContent = Number(confSlider.value).toFixed(2);
+        });
+        iouSlider.addEventListener("input", () => {
+            iouValue.textContent = Number(iouSlider.value).toFixed(2);
+        });
+
+        function fmtTime(iso) {
+            if (!iso) return "-";
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return "-";
+            return d.toLocaleTimeString("zh-CN", { hour12: false });
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch("/api/status");
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || "状态获取失败");
+                const data = json.data || {};
+                const counts = data.current || {};
+                const person = counts.Person ?? 0;
+                const raise = counts["Raise Hand"] ?? 0;
+                const lie = counts["Lie Down"] ?? 0;
+                const phone = counts["Phone Usage"] ?? 0;
+                const sys = data.system_status || {};
+                const running = sys.running === true;
+                systemStatus.textContent = `${running ? '运行中' : '未运行'} | 检测目标: ${person + raise + lie + phone} 个`;
+                totalPerson.textContent = String(person);
+                courseName.textContent = (data.camera_info || {}).course_name || "未选择";
+                lastUpdate.textContent = fmtTime(data.last_update);
+                const focus = data.focus || {};
+                // 右侧“置信度”卡片：显示专注度得分 / 100，保留两位小数
+                const fs = Number(focus.score ?? 80);
+                focusScore.textContent = fs.toFixed(2);
+                focusLevel.textContent = focus.level || "中";
+                const modal = data.multimodal || {};
+                modalVision.textContent = modal.vision ? "ON" : "OFF";
+                modalAudio.textContent = modal.audio ? "ON" : "OFF";
+                modalInteraction.textContent = modal.interaction ? "ON" : "OFF";
+
+                if (running) startFramePolling();
+                else stopFramePolling();
+            } catch (e) {
+                console.error("fetchStatus error:", e);
+                systemStatus.textContent = "检测目标: 读取失败";
+                stopFramePolling();
+            }
+        }
+
+        async function fetchHistory() {
+            try {
+                const res = await fetch("/api/history?limit=5");
+                const json = await res.json();
+                if (!json.success) throw new Error(json.error || "历史获取失败");
+                const rows = json.data || [];
+                if (!rows.length) {
+                    historyTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#7697b2;">暂无检测记录</td></tr>';
+                    return;
+                }
+                historyTbody.innerHTML = "";
+                rows.forEach((row, idx) => {
+                    const c = row.counts || {};
+                    const person = c.Person ?? 0;
+                    const raise = c["Raise Hand"] ?? 0;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${idx + 1}</td>
+                        <td>${(row.camera_info || {}).name || "-"}</td>
+                        <td>Person/Hand</td>
+                        <td>${(person + raise).toFixed(2)}</td>
+                        <td>${fmtTime(row.timestamp)} | 专注度 ${(row.focus?.score ?? 80).toFixed(1)}</td>
+                    `;
+                    historyTbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error("fetchHistory error:", e);
+                historyTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#d46e6e;">历史记录读取失败</td></tr>';
+            }
+        }
+
+        async function refreshAll() {
+            await Promise.all([fetchStatus(), fetchHistory()]);
+        }
+
+        refreshBtn.addEventListener("click", refreshAll);
+        loadModels(false);
+        refreshAll();
+        setInterval(fetchStatus, 10000);
+    </script>
+</body>
+</html>
+
